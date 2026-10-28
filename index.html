@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Round 2 · The Architect’s Blueprint | The Lost Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<!--
+SETUP (see SETUP.md): paste your Google Apps Script web-app URL into CFG.SHEET_URL below so every team's
+result lands in ONE shared Google Sheet. Leave it '' to test locally (results stay in this browser only).
+-->
+<style>
+:root{--bg:#04060d;--card:#080c18;--line:rgba(92,200,242,.22);--cy:#5cc8f2;--mg:#ff1493;--tx:#e9eef8;--dim:#8a95ab}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(900px 500px at 75% 5%,rgba(92,200,242,.07),transparent 60%),var(--bg);color:var(--tx);font:16px/1.6 'Space Grotesk',system-ui,sans-serif;min-height:100vh}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 5vw;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(4,6,13,.92);backdrop-filter:blur(8px);z-index:5}
+.logo{font:700 13px Orbitron,sans-serif;letter-spacing:.06em;display:flex;align-items:center;gap:10px}.logo b{color:var(--cy)}
+.logo i{width:24px;height:24px;border-radius:50%;border:2px solid var(--cy);display:inline-block;box-shadow:inset 0 0 0 4px var(--bg),inset 0 0 0 9px var(--cy)}
+.pill{font:700 11px Orbitron,sans-serif;letter-spacing:.08em;background:var(--mg);padding:11px 16px;color:#fff}
+#timer{font-variant-numeric:tabular-nums}
+main{max-width:1080px;margin:0 auto;padding:44px 5vw 60px}
+.k{font:600 11px Orbitron,sans-serif;letter-spacing:.18em;color:var(--cy);text-transform:uppercase;margin:0 0 14px}
+h1,h2{font-family:Orbitron,sans-serif;font-weight:900;line-height:1.05;margin:0 0 16px;letter-spacing:-.01em}
+h1{font-size:clamp(34px,7vw,68px)}h2{font-size:clamp(24px,4.5vw,40px)}h1 em,h2 em{color:var(--cy);font-style:normal}
+p{color:#c4ccdb;max-width:62ch}.dim{color:var(--dim);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);padding:22px;margin:18px 0;position:relative;overflow:hidden}
+.card:after{content:"";position:absolute;right:-60px;top:-60px;width:150px;height:150px;border-radius:50%;border:1px solid var(--line);pointer-events:none}
+.btn{font:700 12px Orbitron,sans-serif;letter-spacing:.08em;background:var(--mg);color:#fff;border:0;padding:14px 22px;cursor:pointer;text-transform:uppercase}
+.btn:hover{filter:brightness(1.15)}.btn.g{background:transparent;border:1px solid var(--line);color:var(--cy)}.btn:disabled{opacity:.4;cursor:not-allowed}
+input{background:#04060d;border:1px solid var(--line);color:var(--tx);font:inherit;padding:12px 14px;width:100%;max-width:340px;margin:4px 0 14px}
+input:focus{outline:1px solid var(--cy)}label{font:600 11px Orbitron,sans-serif;letter-spacing:.12em;color:var(--cy);display:block}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:10px}
+.opt{background:#060a14;border:1px solid var(--line);color:var(--tx);padding:12px 14px;text-align:left;font:inherit;cursor:pointer}
+.opt:hover{border-color:var(--cy)}.ok{border-color:#3ddc97!important;color:#3ddc97}.bad{border-color:var(--mg)!important;color:var(--mg)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vis canvas{width:100%;border:1px solid var(--line);background:#050813}
+.eqs{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin:16px 0}
+.eq{background:#060a14;border:1px solid var(--line);color:var(--tx);padding:11px 14px;cursor:pointer;text-align:left;font:inherit}
+.eq b{display:block;font:600 14px 'Courier New',monospace}.eq small{color:var(--dim)}
+.eq.on{border-color:var(--cy);background:rgba(92,200,242,.1);box-shadow:0 0 14px rgba(92,200,242,.25)}
+.msg{min-height:24px;font-size:14px;margin:8px 0}.hint{border-left:2px solid var(--mg);padding:4px 12px;margin:6px 0;color:#c4ccdb;font-size:14px}
+.ins{font:600 clamp(16px,3vw,22px) Orbitron,sans-serif;color:var(--cy);line-height:1.4}
+.stamp{display:inline-block;border:1px solid var(--mg);color:var(--mg);font:700 12px Orbitron,sans-serif;padding:8px 12px;transform:rotate(-3deg);letter-spacing:.1em}
+.steps{display:flex;gap:6px;margin-bottom:22px}.stp{flex:1;background:transparent;border:1px solid var(--line);border-bottom-width:3px;color:var(--dim);padding:8px 4px;font:700 11px Orbitron,sans-serif;letter-spacing:.06em;cursor:pointer}.stp:hover{color:var(--tx)}.stp.d{border-bottom-color:#3ddc97;color:#3ddc97}.stp.c{border-bottom-color:var(--mg);color:#fff;border-color:var(--mg)}.stp.s{border-bottom-color:var(--dim)}
+footer{border-top:1px solid var(--line);padding:18px 5vw;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:12px}
+footer a{color:var(--dim);cursor:pointer;text-decoration:underline}
+@media(max-width:700px){.vis{grid-template-columns:1fr}.pill{padding:9px 10px;font-size:10px}.logo span{display:none}}
+</style>
+</head>
+<body>
+<div class="nav"><a class="logo" id="home" style="color:inherit;text-decoration:none"><i></i><span>THE LOST <b>TIMELINE</b></span></a><div class="row"><button class="btn g" id="qb" style="display:none;padding:10px 14px" onclick="quit()">✕ Quit</button><div class="pill">ROUND 02 · <span id="timer">00:00</span></div></div></div>
+<main id="app"></main>
+<footer><span>Your era. Your fate. Restore the timeline.</span><a onclick="admin()">Organizer export</a></footer>
+
+<script>
+
+const CFG={BASE_URL:'/missions',MAX_TRIES:3,ROUND:'R2',SHEET_URL:'https://script.google.com/macros/s/AKfycbw8ZDdD2h8cJvUYMgvCR0rB1dPdEwgba-8yxc2mnLyAysRMDIa_3lCbj1-ScTgtjIo/exec',PASS:'CHRONO2',ID_RE:/^LT-\d{3}$/i,ID_HINT:'LT-001'};
+
+const $=s=>document.querySelector(s);
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+/* ---------- equation helpers: [text, restriction, shape, isCorrect] ---------- */
+const pr=(v,s)=>v?`(${s} ${v<0?'+':'-'} ${Math.abs(v)})²`:`${s}²`;
+const L=(m,c,a,b,ok,rt)=>[`y = ${m==1?'':m==-1?'-':m}x${c?` ${c<0?'-':'+'} ${Math.abs(c)}`:''}`,rt||`${a} ≤ x ≤ ${b}`,[a,m*a+c,b,m*b+c],ok];
+const H=(k,a,b,ok)=>[`y = ${k}`,`${a} ≤ x ≤ ${b}`,[a,k,b,k],ok];
+const V=(k,a,b,ok)=>[`x = ${k}`,`${a} ≤ y ≤ ${b}`,[k,a,k,b],ok];
+const C=(h,k,r2,ok)=>[`${pr(h,'x')} + ${pr(k,'y')} = ${r2}`,'full circle',[h,k,Math.sqrt(r2)],ok];
+const D='-3/√2 ≤ x ≤ 3/√2',d=2.1213;
+const P=[
+{t:'The Star of Infinity',civ:'Islamic geometric art',df:'Easy',b:[-3.5,3.5,-3.5,3.5],
+ s:'The first seal is an eight-pointed star. Its outermost points lie three units from the origin along the coordinate axes. The architect left the vertices but scrambled the equations. Restore the outline.',
+ q:[{p:'Which equation family is most suitable for constructing the star’s straight-edged outline?',o:['Circles','Linear equations with restrictions','Quadratic functions','Trigonometric functions'],a:1},
+    {p:'The edge from (0, 3) to (1, 1) is a line y = mx + 3. Find the slope m.',a:-2}],
+ e:[L(-2,3,0,1,1),L(-.5,1.5,1,3,1),L(.5,-1.5,1,3,1),L(2,-3,0,1,1),L(-2,-3,-1,0,1),L(-.5,-1.5,-3,-1,1),L(.5,1.5,-3,-1,1),L(2,3,-1,0,1),L(-1,3,0,1,0),L(-2,3,0,2,0),L(2,-2,0,1,0)],
+ h:['Every edge is a straight line.','Use the change in y divided by the change in x to find each slope.','The segment from (0,3) to (1,1) has equation y = -2x + 3.'],
+ i:'All journeys begin with a pattern.'},
+{t:'The Rose of Time',civ:'Medieval European Gothic',df:'Medium',b:[-3.5,3.5,-3.5,3.5],
+ s:'The cathedral’s rose window has lost its tracery. Three circular rings survive in the architect’s notes, but the radii have been scrambled. All circles share the origin as centre; the outer radius is 3, the middle 2, the central 0.5. Restore the rings and the four axes of symmetry (full diameters).',
+ q:[{p:'Which equation represents a circle centred at the origin?',o:['y = mx + c','x² + y² = r²','y = ax² + bx + c','x = k'],a:1},
+    {p:'The outer circle x² + y² = r² passes through (3, 0). What is r?',a:3}],
+ e:[C(0,0,9,1),C(0,0,4,1),C(0,0,.25,1),H(0,-3,3,1),V(0,-3,3,1),L(1,0,-d,d,1,D),L(-1,0,-d,d,1,D),C(0,0,16,0),C(0,0,2,0),L(1,0,-3,3,0)],
+ h:['A circle’s radius is the distance from its centre to any point on the circle.','Substitute (3,0) into the circle equation.','The outer circle is x² + y² = 9.'],
+ i:'Time is measured in cycles.'},
+{t:'The Lotus Medallion',civ:'Ancient Indian & Buddhist art',df:'Medium',b:[-3,3,-3,3],
+ s:'The fragment was hidden in a lotus medallion. One petal is described in the notes, but the other petals have been lost. Four petals of radius 1.5 sit on the axes, with a small central circle of radius 0.5. Recover the design using the medallion’s symmetry.',
+ q:[{p:'Which equation describes a circle centred at (h, k) with radius r?',o:['(x-h)² + (y-k)² = r²','y = mx + c','y = ax²','x = k'],a:0},
+    {p:'Top petal: x² + (y - k)² = 2.25, with centre (0, 1.5). What is k?',a:1.5},
+    {p:'Which transformation moves the top petal’s centre (0, 1.5) to (1.5, 0)?',o:['Rotate 90° clockwise about the origin','Rotate 90° anticlockwise about the origin','Reflect in the x-axis','Translate 1.5 units left'],a:0}],
+ e:[C(0,1.5,2.25,1),C(0,-1.5,2.25,1),C(1.5,0,2.25,1),C(-1.5,0,2.25,1),C(0,0,.25,1),C(0,2,2.25,0),C(1.5,0,4,0),C(0,-1,2.25,0)],
+ h:['The four petals are identical.','The radius remains the same when the centre moves.','Changing the sign inside (y - k) moves the circle’s centre vertically.'],
+ i:'Separate paths can form a single design.'},
+{t:'The Serpent’s Path',civ:'Maya / Mesoamerican architecture',df:'Medium–Hard',b:[-1,9,-1,7],
+ s:'The final seal is a stepped path carved into stone. The architect left the turning points but removed the equations: (0,0) → (0,4) → (2,4) → (2,2) → (4,2) → (4,6) → (6,6) → (6,4) → (8,4) → (8,0). Reconnect the path without letting any segment overshoot its endpoint.',
+ q:[{p:'Which pair of equation types builds this angular stepped path?',o:['Vertical (x = k) and horizontal (y = k) segments','Circles','Parabolas','Sloped lines only'],a:0},
+    {p:'The vertical segment through (4, 2) and (4, 6) is x = k. What is k?',a:4},
+    {p:'Which segment comes next after x = 4, 2 ≤ y ≤ 6 ?',o:['y = 6, 4 ≤ x ≤ 6','y = 6, 4 ≤ x ≤ 8','x = 6, 2 ≤ y ≤ 6','y = 2, 4 ≤ x ≤ 6'],a:0}],
+ e:[V(0,0,4,1),H(4,0,2,1),V(2,2,4,1),H(2,2,4,1),V(4,2,6,1),H(6,4,6,1),V(6,4,6,1),H(4,6,8,1),V(8,0,4,1),V(2,0,4,0),H(4,0,4,0),V(7,0,4,0)],
+ h:['Vertical lines have constant x; horizontal lines have constant y.','Every segment must begin where the previous one ends.','The segment after the central vertical line is y = 6 from x = 4 to x = 6.'],
+ i:'The fragments are connected.'}];
+const FINAL='Patterns mark our beginning. Cycles measure our time. Separate paths become one design, and all fragments are connected.';
+
+/* ---------- state & helpers ---------- */
+let S={team:null,t0:0,i:0,g:[]},tick;
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+const now=()=>Math.floor((Date.now()-S.t0)/1000);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bar=i=>`<div class="steps">${P.map((_,j)=>{const g=S.g[j]||{};return `<button class="stp ${g.done?'d':j==i?'c':g.skipped||g.locked?'s':''}" onclick="jump(${j})">0${j+1}${g.done?' ✓':g.skipped?' ⤼':''}</button>`}).join('')}</div>`;
+function jump(j){if(S.t0&&j!=S.i)puz(j)}
+function nxt(i){i<P.length-1?puz(i+1):endCheck()}
+
+function draw(cv,items,b,col){
+  const W=cv.width=560,Hh=cv.height=Math.round(560*(b[3]-b[2])/(b[1]-b[0])),c=cv.getContext('2d');
+  const X=x=>(x-b[0])/(b[1]-b[0])*W,Y=y=>Hh-(y-b[2])/(b[3]-b[2])*Hh;
+  c.strokeStyle='rgba(92,200,242,.12)';c.lineWidth=1;
+  for(let x=Math.ceil(b[0]);x<=b[1];x++){c.beginPath();c.moveTo(X(x),0);c.lineTo(X(x),Hh);c.stroke()}
+  for(let y=Math.ceil(b[2]);y<=b[3];y++){c.beginPath();c.moveTo(0,Y(y));c.lineTo(W,Y(y));c.stroke()}
+  c.strokeStyle='rgba(92,200,242,.45)';
+  if(b[0]<=0&&b[1]>=0){c.beginPath();c.moveTo(X(0),0);c.lineTo(X(0),Hh);c.stroke()}
+  if(b[2]<=0&&b[3]>=0){c.beginPath();c.moveTo(0,Y(0));c.lineTo(W,Y(0));c.stroke()}
+  c.strokeStyle=col;c.lineWidth=3;c.shadowColor=col;c.shadowBlur=10;c.lineCap='round';
+  items.forEach(s=>{c.beginPath();if(s.length==4){c.moveTo(X(s[0]),Y(s[1]));c.lineTo(X(s[2]),Y(s[3]))}else c.arc(X(s[0]),Y(s[1]),s[2]/(b[1]-b[0])*W,0,7);c.stroke()});
+}
+
+/* ---------- screens ---------- */
+function teamScreen(){
+  $('#app').innerHTML=`<p class="k">Archive file 02 / Medieval era</p><h1>The Architect’s <em>Blueprint.</em></h1>
+  <p>Chrono Explorers, identify your crew before the jump. Your Team ID must match the one used in every other round.</p>
+  <div class="card"><label>TEAM ID (e.g. ${CFG.ID_HINT})</label><input id="tid" placeholder="${CFG.ID_HINT}" autocomplete="off">
+  <label>TEAM NAME</label><input id="tn" placeholder="Your crew name" autocomplete="off"><div class="msg bad" id="em"></div>
+  <button class="btn" onclick="start()">Enter the castle ↗</button></div>
+  <div class="card"><p class="k">Organizers only</p><p class="dim" style="margin-top:0">Download every team's Round 2 results as one CSV.</p><button class="btn g" onclick="admin()">⬇ Download results CSV</button></div>`;
+}
+function start(){
+  const id=$('#tid').value.trim().toUpperCase(),n=$('#tn').value.trim();
+  if(!CFG.ID_RE.test(id))return $('#em').textContent='Team ID must look like '+CFG.ID_HINT+'.';
+  if(n.length<2)return $('#em').textContent='Please enter your team name.';
+  if(JSON.parse(localStorage.getItem('lt_r2')||'[]').some(r=>r.team_id==id)&&!confirm('This Team ID already submitted on this device. Continue anyway?'))return;
+  S={team:{id,name:n},t0:Date.now(),i:0,g:P.map(()=>({qw:0,att:0,hints:0,t:0,q:[],sel:new Set(),done:false,skipped:false,locked:false}))};
+  clearInterval(tick);tick=setInterval(()=>$('#timer').textContent=fmt(now()),1000);
+  $('#qb').style.display='';brief();
+}
+function brief(){
+  $('#app').innerHTML=`<p class="k">Mission briefing · ${esc(S.team.id)} · ${esc(S.team.name)}</p><h2>The Chronicle of the <em>Lost Architect.</em></h2>
+  <p>Long ago, an architect travelled the world, studying the geometry hidden in the art and monuments of different civilizations. Before the <i>Chronicle of Time</i> was complete, the archive shattered into four fragments, each concealed inside an artistic motif and scrambled into mathematical clues.</p>
+  <div class="card"><p class="k">For each motif</p><p style="margin:0">1. Inspect the reference blueprint.<br>2. Answer the equation-family and missing-constant questions.<br>3. Select the equations that form the motif — <b>some options are decoys</b>, so check every restriction.<br>4. Submit to reveal the next inscription.<br><span class="dim">Hints are optional (3 per motif). The clock is running. Team ${esc(S.team.name)}, good luck.</span></p></div>
+  <button class="btn" onclick="puz(0)">Begin motif 01 ↗</button>`;
+}
+function puz(i){
+  S.i=i;const p=P[i],g=S.g[i];if(g.st===undefined)g.st=now();
+  if(g.done||g.locked)return $('#app').innerHTML=`${bar(i)}<p class="k">Motif 0${i+1} / 04 · ${g.done?'restored ✓':'attempts used up'}</p><h2>${p.t}</h2><div class="card"><p class="k">${g.done?'Inscription':'Not restored'}</p><p class="ins">${g.done?'“'+p.i+'”':'All plot attempts for this motif were used.'}</p><button class="btn" onclick="nxt(${i})">Continue ↗</button></div>`;
+  g.q=p.q.map(()=>false);
+  $('#app').innerHTML=`${bar(i)}<p class="k">Motif 0${i+1} / 04 · ${p.civ} · ${p.df}</p><h2>${p.t}</h2><p><i>“${p.s}”</i></p>
+  <div id="qs"></div><div id="build"></div><div class="row" style="margin-top:10px"><button class="btn g" onclick="skip()">Stuck? Skip this motif ⤼</button><span class="dim">You can come back to it any time using the tabs above.</span></div>`;
+  sh(p.q.map((_,k)=>k)).forEach((k,n)=>{const q=p.q[k];$('#qs').insertAdjacentHTML('beforeend',`<div class="card" id="q${k}"><p class="k">Question ${n+1}</p><p style="margin:0;color:#fff">${q.p}</p>${q.o?`<div class="opts">${sh(q.o.map((_,j)=>j)).map(j=>`<button class="opt" onclick="ans(${k},${j},this)">${q.o[j]}</button>`).join('')}</div>`:`<div class="row" style="margin-top:10px"><input id="n${k}" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. -2 or 1.5" onkeydown="if(event.key==='Enter')document.getElementById('c${k}').click()" style="margin:0;width:150px"><button class="btn g" type="button" onclick="neg(${k})" title="Toggle minus sign">±</button><button class="btn g" id="c${k}" onclick="ans(${k},document.getElementById('n${k}').value,this)">Check</button></div>`}<div class="msg" id="m${k}"></div></div>`)});
+}
+function ans(k,v,el){
+  const q=P[S.i].q[k],g=S.g[S.i];if(g.q[k])return;
+  const ok=q.o?v==q.a:Math.abs(parseFloat(String(v).replace(/[−–—]/g,'-').replace(',','.').trim())-q.a)<1e-9;
+  if(!ok){g.qw++;$('#m'+k).innerHTML='<span class="bad" style="color:var(--mg)">Not quite — try again.</span>';if(q.o)el.classList.add('bad');return}
+  g.q[k]=true;$('#m'+k).innerHTML='<span style="color:#3ddc97">Correct ✓</span>';if(q.o)el.classList.add('ok');
+  document.querySelectorAll('#q'+k+' button,#q'+k+' input').forEach(x=>x.disabled=true);
+  if(g.q.every(Boolean))build();
+}
+function neg(k){const i=document.getElementById('n'+k);i.value=i.value.trim().startsWith('-')?i.value.trim().slice(1):'-'+i.value.trim();i.focus()}
+function build(){
+  const p=P[S.i],g=S.g[S.i],N=p.e.filter(e=>e[3]).length;g.order=sh(p.e.map((_,j)=>j));
+  $('#build').innerHTML=`<div class="card"><p class="k">Reconstruct the motif</p><p class="dim" style="margin-top:0">1) Choose exactly the equations you think form the blueprint (max ${N}). 2) Press <b>Plot my graph</b> to see the complete graph. 3) If it doesn’t match the reference, edit your choices and plot again — you have <b>${CFG.MAX_TRIES}</b> plot attempts. Restrictions matter!</p>
+  <div class="vis"><div><p class="dim">Reference blueprint</p><canvas id="ref"></canvas></div><div><p class="dim">Your graph</p><canvas id="plot"></canvas></div></div>
+  <p class="dim" style="margin-bottom:0">Selected <b id="sc">0</b>/${N} · Plot attempts left <b id="al"></b></p>
+  <div class="eqs">${g.order.map(j=>`<button class="eq ${g.sel.has(j)?'on':''}" id="e${j}" onclick="tog(${j})"><b>${p.e[j][0]}</b><small>${p.e[j][1]}</small></button>`).join('')}</div>
+  <div id="hs"></div><div class="msg" id="fb"></div>
+  <div class="row"><button class="btn" id="pb" onclick="sub()">Plot my graph</button><button class="btn g" onclick="clr()">Clear choices</button><button class="btn g" id="hb" onclick="hint()">Hint (0/3)</button></div></div><div id="done"></div>`;
+  draw($('#ref'),p.e.filter(e=>e[3]).map(e=>e[2]),p.b,'rgba(255,20,147,.7)');
+  draw($('#plot'),g.att?[...g.sel].map(j=>p.e[j][2]):[],p.b,'#5cc8f2');cnt();
+  for(let n=0;n<g.hints;n++)$('#hs').insertAdjacentHTML('beforeend',`<div class="hint">${p.h[n]}</div>`);$('#hb').textContent=`Hint (${g.hints}/3)`;if(g.hints>=3)$('#hb').disabled=true;
+  $('#build').scrollIntoView({behavior:'smooth'});
+}
+function cnt(){const g=S.g[S.i];$('#sc').textContent=g.sel.size;$('#al').textContent=Math.max(0,CFG.MAX_TRIES-g.att)}
+function upd(){const p=P[S.i];draw($('#plot'),[...S.g[S.i].sel].map(j=>p.e[j][2]),p.b,'#5cc8f2')}
+function tog(j){
+  const g=S.g[S.i],N=P[S.i].e.filter(e=>e[3]).length;
+  if(g.sel.has(j))g.sel.delete(j);else{if(g.sel.size>=N)return $('#fb').innerHTML=`<span style="color:var(--mg)">You can choose at most ${N} equations. Deselect one first.</span>`;g.sel.add(j)}
+  $('#e'+j).classList.toggle('on');$('#fb').innerHTML='';cnt();
+}
+function clr(){const g=S.g[S.i];g.sel.clear();document.querySelectorAll('#build .eq').forEach(b=>b.classList.remove('on'));$('#fb').innerHTML='';cnt()}
+function hint(){const g=S.g[S.i],p=P[S.i];if(g.hints>=3)return;$('#hs').insertAdjacentHTML('beforeend',`<div class="hint">${p.h[g.hints]}</div>`);g.hints++;$('#hb').textContent=`Hint (${g.hints}/3)`;if(g.hints>=3)$('#hb').disabled=true}
+function sub(){
+  const p=P[S.i],g=S.g[S.i];
+  if(!g.sel.size)return $('#fb').innerHTML='<span style="color:var(--mg)">Choose at least one equation first.</span>';
+  if(g.att>=CFG.MAX_TRIES)return;
+  g.att++;upd();cnt();$('#plot').scrollIntoView({behavior:'smooth',block:'center'});
+  const bad=[...g.sel].filter(j=>!p.e[j][3]).length,miss=p.e.filter((e,j)=>e[3]&&!g.sel.has(j)).length,last=S.i==P.length-1;
+  const lock=()=>document.querySelectorAll('#build .eq,#build .btn').forEach(b=>b.disabled=true);
+  if(!bad&&!miss){
+    g.t=now()-g.st;g.done=true;g.skipped=false;lock();
+    $('#fb').innerHTML='<span style="color:#3ddc97">Graph matches the blueprint ✓</span>';
+    $('#done').innerHTML=`<div class="card"><p class="k">Inscription revealed</p><p class="ins">“${p.i}”</p><button class="btn" onclick="nxt(${S.i})">${last?'Continue':'Next motif'} ↗</button></div>`;
+    return $('#done').scrollIntoView({behavior:'smooth'});
+  }
+  const left=CFG.MAX_TRIES-g.att;
+  if(left>0)return $('#fb').innerHTML=`<span style="color:var(--mg)">Your graph doesn’t match the reference: ${bad} chosen equation(s) don’t belong, ${miss} missing. Compare the two graphs, then edit your choices and plot again — ${left} attempt${left>1?'s':''} left.</span>`;
+  g.t=now()-g.st;g.locked=true;lock();
+  $('#fb').innerHTML='<span style="color:var(--mg)">Graph still doesn’t match, and no attempts are left for this motif.</span>';
+  $('#done').innerHTML=`<div class="card"><p class="k">Attempts used up</p><p class="ins" style="color:var(--mg)">This motif could not be restored.</p><button class="btn" onclick="nxt(${S.i})">${last?'Continue':'Next motif'} ↗</button></div>`;
+  $('#done').scrollIntoView({behavior:'smooth'});
+}
+function mkRow(done){
+  const T=now();
+  return {team_id:S.team.id,team_name:S.team.name,round_id:CFG.ROUND,
+   responses:S.g.map((g,i)=>`P${i+1}{wrong_answers:${g.qw};build_attempts:${g.att};hints:${g.hints};time_s:${g.t}}`).join(' | '),
+   completion_time:T,submitted_at:new Date().toISOString(),hints_used:S.g.reduce((a,g)=>a+g.hints,0),build_attempts:S.g.reduce((a,g)=>a+g.att,0),
+   wrong_answers:S.g.reduce((a,g)=>a+g.qw,0),puzzle_times_s:S.g.map(g=>g.t).join('/'),puzzles_solved:S.g.filter(g=>g.done).length,fragment_recovered:done?'TRUE':'FALSE'};
+}
+function save(row){const all=JSON.parse(localStorage.getItem('lt_r2')||'[]').filter(r=>r.team_id!=row.team_id);all.push(row);localStorage.setItem('lt_r2',JSON.stringify(all))}
+function quit(){
+  if(!confirm('Quit Round 2? Your progress so far will be saved as an incomplete attempt and you will return to the start screen.'))return;
+  clearInterval(tick);const row=mkRow(false);save(row);sync(row);
+  $('#qb').style.display='none';$('#timer').textContent='00:00';teamScreen();
+}
+function skip(){
+  if(!confirm('Skip this motif? It will count as NOT restored, but you can return to it later using the tabs at the top.'))return;
+  S.g[S.i].skipped=true;nxt(S.i);
+}
+function endCheck(){
+  const un=S.g.map((g,j)=>g.done?-1:j).filter(j=>j>=0),open=un.filter(j=>!S.g[j].locked);
+  if(!un.length)return finish(true);
+  if(!open.length)return finish(false);
+  $('#app').innerHTML=`${bar(-1)}<p class="k">Fragment not yet complete</p><h2>${un.length} motif${un.length>1?'s':''} still <em>unrestored.</em></h2>
+  <p>Time Fragment #2 needs all four motifs. Go back and finish the missing ones, or end the round now with what you have.</p>
+  <div class="row">${open.map(j=>`<button class="btn" onclick="puz(${j})">Return to motif 0${j+1} ↗</button>`).join('')}<button class="btn g" onclick="if(confirm('End Round 2 now? Fragment #2 will NOT be recovered.'))finish(false)">End round anyway</button></div>`;
+}
+function finish(ok){
+  clearInterval(tick);const row=mkRow(ok),T=row.completion_time;save(row);
+  $('#app').innerHTML=`${bar(4)}<p class="k">Round 02 ${ok?'complete':'ended'} · ${fmt(T)}</p><h1>${ok?'Time Fragment <em>#2</em> recovered.':'Fragment <em>#2</em> incomplete.'}</h1>
+  <span class="stamp">${ok?'MEDIEVAL TIMELINE STABILIZED':'MEDIEVAL TIMELINE UNSTABLE — '+row.puzzles_solved+'/4 RESTORED'}</span>
+  ${ok?`<div class="card"><p class="k">The architect’s message</p><p class="ins">“${FINAL}”</p></div>`:''}
+  <p class="dim" id="sy">Sending results to Mission Control…</p>
+  <p class="dim">“The machines of the future will fail because of what happens next…” — await the organizers for the third jump.</p>
+  <div class="row"><button class="btn g" onclick='dl([${JSON.stringify(row)}],"${row.team_id}_round2.csv")'>⬇ Download my team's CSV</button>${CFG.BASE_URL?`<a class="btn g" style="text-decoration:none;display:inline-block" href="${CFG.BASE_URL}">↩ Back to missions</a>`:''}<button class="btn g" onclick="$('#qb').style.display='none';$('#timer').textContent='00:00';teamScreen()">⌂ Back to start</button></div>`;
+  sync(row).then(ok=>$('#sy').textContent=ok?'✓ Result submitted. You may close this page.':'Saved on this device. If this message persists, tell an organizer — do not close the tab.');
+}
+/* ---------- shared storage (Google Sheet via Apps Script) + CSV ---------- */
+const COLS=['team_id','team_name','round_id','responses','completion_time','submitted_at','hints_used','build_attempts','wrong_answers','puzzle_times_s','puzzles_solved','fragment_recovered'];
+async function sync(row){
+  if(!CFG.SHEET_URL)return false;
+  try{await fetch(CFG.SHEET_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(row)});return true}catch(e){return false}
+}
+const csv=rows=>[COLS.join(','),...rows.map(r=>COLS.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))].join('\n');
+async function admin(){
+  if(prompt('Organizer passcode:')!==CFG.PASS)return;
+  let rows=JSON.parse(localStorage.getItem('lt_r2')||'[]');
+  if(CFG.SHEET_URL){try{const r=await (await fetch(CFG.SHEET_URL+'?pass='+encodeURIComponent(CFG.PASS))).json();if(Array.isArray(r))rows=r}catch(e){alert('Could not reach the shared sheet — exporting this device’s results only.')}}
+  if(!rows.length)return alert('No results yet.');
+  dl(rows,'round2_results.csv');
+}
+function dl(rows,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv(rows)],{type:'text/csv'}));a.download=name;a.click()}
+if(CFG.BASE_URL)$('#home').href=CFG.BASE_URL;
+teamScreen();
+</script>
+</body>
+</html>
