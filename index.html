@@ -54,7 +54,24 @@ footer a{color:var(--dim);cursor:pointer;text-decoration:underline}
 <footer><span>Your era. Your fate. Restore the timeline.</span><a onclick="admin()">Organizer export</a></footer>
 
 <script>
-const CFG={Q_MCQ:2,Q_NUM:3,BASE_URL:'/missions',MAX_TRIES:3,ROUND:'R2',SHEET_URL:'',PASS:'CHRONO2',ID_RE:/^LT-\d{3}$/i,ID_HINT:'LT-001'};
+
+const CFG = {
+  Q_MCQ: 2,
+  Q_NUM: 3,
+  MAX_TRIES: 3,
+  ROUND: 'R2',
+
+  // Google Sheets integration
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbw8ZDdD2h8cJvUYMgvCR0rB1dPdEwgba-8yxc2mnLyAysRMDIa_3lCbj1-ScTgtjIo/exec',
+
+  // Organizer passcode
+  PASS: 'CHRONO2',
+
+  // Team ID validation
+  ID_RE: /^LT-\d{3}$/i,
+  ID_HINT: 'LT-001'
+};
+
 const $=s=>document.querySelector(s);
 const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 /* ---------- equation helpers: [text, restriction, shape, isCorrect] ---------- */
