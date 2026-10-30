@@ -31,7 +31,7 @@ input{background:#04060d;border:1px solid var(--line);color:var(--tx);font:inher
 input:focus{outline:1px solid var(--cy)}label{font:600 11px Orbitron,sans-serif;letter-spacing:.12em;color:var(--cy);display:block}
 .opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:10px}
 .opt{background:#060a14;border:1px solid var(--line);color:var(--tx);padding:12px 14px;text-align:left;font:inherit;cursor:pointer}
-.opt:hover{border-color:var(--cy)}.ok{border-color:#3ddc97!important;color:#3ddc97}.bad{border-color:var(--mg)!important;color:var(--mg)}
+.opt:hover:not(:disabled){border-color:var(--cy)}.opt:disabled{cursor:not-allowed}.opt:disabled:not(.ok):not(.bad){opacity:.45}.ok{border-color:#3ddc97!important;color:#3ddc97}.bad{border-color:var(--mg)!important;color:var(--mg)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .vis{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .vis canvas{width:100%;border:1px solid var(--line);background:#050813}
@@ -54,9 +54,7 @@ footer a{color:var(--dim);cursor:pointer;text-decoration:underline}
 <footer><span>Your era. Your fate. Restore the timeline.</span><a onclick="admin()">Organizer export</a></footer>
 
 <script>
-
-const CFG={BASE_URL:'/missions',MAX_TRIES:3,ROUND:'R2',SHEET_URL:'https://script.google.com/macros/s/AKfycbw8ZDdD2h8cJvUYMgvCR0rB1dPdEwgba-8yxc2mnLyAysRMDIa_3lCbj1-ScTgtjIo/exec',PASS:'CHRONO2',ID_RE:/^LT-\d{3}$/i,ID_HINT:'LT-001'};
-
+const CFG={Q_MCQ:2,Q_NUM:3,BASE_URL:'/missions',MAX_TRIES:3,ROUND:'R2',SHEET_URL:'',PASS:'CHRONO2',ID_RE:/^LT-\d{3}$/i,ID_HINT:'LT-001'};
 const $=s=>document.querySelector(s);
 const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 /* ---------- equation helpers: [text, restriction, shape, isCorrect] ---------- */
@@ -128,7 +126,7 @@ function teamScreen(){
   <div class="card"><label>TEAM ID (e.g. ${CFG.ID_HINT})</label><input id="tid" placeholder="${CFG.ID_HINT}" autocomplete="off">
   <label>TEAM NAME</label><input id="tn" placeholder="Your crew name" autocomplete="off"><div class="msg bad" id="em"></div>
   <button class="btn" onclick="start()">Enter the castle ↗</button></div>
-  <div class="card"><p class="k">Organizers only</p><p class="dim" style="margin-top:0">Download every team's Round 2 results as one CSV.</p><button class="btn g" onclick="admin()">⬇ Download results CSV</button></div>`;
+  <div class="card"><p class="k">Organizers only</p><p class="dim" style="margin-top:0">Download every team's Round 2 results as one CSV.</p><div class="row"><button class="btn g" onclick="admin()">⬇ Download results CSV</button><button class="btn g" style="color:var(--mg);border-color:var(--mg)" onclick="clearData()">🗑 Clear test data</button></div></div>`;
 }
 function start(){
   const id=$('#tid').value.trim().toUpperCase(),n=$('#tn').value.trim();
@@ -148,18 +146,28 @@ function brief(){
 function puz(i){
   S.i=i;const p=P[i],g=S.g[i];if(g.st===undefined)g.st=now();
   if(g.done||g.locked)return $('#app').innerHTML=`${bar(i)}<p class="k">Motif 0${i+1} / 04 · ${g.done?'restored ✓':'attempts used up'}</p><h2>${p.t}</h2><div class="card"><p class="k">${g.done?'Inscription':'Not restored'}</p><p class="ins">${g.done?'“'+p.i+'”':'All plot attempts for this motif were used.'}</p><button class="btn" onclick="nxt(${i})">Continue ↗</button></div>`;
-  g.q=p.q.map(()=>false);
+  if(!g.qt){g.q=p.q.map(()=>0);g.qt=p.q.map(()=>0);g.qb=p.q.map(()=>[])}
   $('#app').innerHTML=`${bar(i)}<p class="k">Motif 0${i+1} / 04 · ${p.civ} · ${p.df}</p><h2>${p.t}</h2><p><i>“${p.s}”</i></p>
   <div id="qs"></div><div id="build"></div><div class="row" style="margin-top:10px"><button class="btn g" onclick="skip()">Stuck? Skip this motif ⤼</button><span class="dim">You can come back to it any time using the tabs above.</span></div>`;
-  sh(p.q.map((_,k)=>k)).forEach((k,n)=>{const q=p.q[k];$('#qs').insertAdjacentHTML('beforeend',`<div class="card" id="q${k}"><p class="k">Question ${n+1}</p><p style="margin:0;color:#fff">${q.p}</p>${q.o?`<div class="opts">${sh(q.o.map((_,j)=>j)).map(j=>`<button class="opt" onclick="ans(${k},${j},this)">${q.o[j]}</button>`).join('')}</div>`:`<div class="row" style="margin-top:10px"><input id="n${k}" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. -2 or 1.5" onkeydown="if(event.key==='Enter')document.getElementById('c${k}').click()" style="margin:0;width:150px"><button class="btn g" type="button" onclick="neg(${k})" title="Toggle minus sign">±</button><button class="btn g" id="c${k}" onclick="ans(${k},document.getElementById('n${k}').value,this)">Check</button></div>`}<div class="msg" id="m${k}"></div></div>`)});
+  sh(p.q.map((_,k)=>k)).forEach((k,n)=>{const q=p.q[k];$('#qs').insertAdjacentHTML('beforeend',`<div class="card" id="q${k}"><p class="k">Question ${n+1}</p><p style="margin:0;color:#fff">${q.p}</p>${q.o?`<div class="opts">${sh(q.o.map((_,j)=>j)).map(j=>`<button class="opt" data-j="${j}" onclick="ans(${k},${j},this)">${q.o[j]}</button>`).join('')}</div>`:`<div class="row" style="margin-top:10px"><input id="n${k}" type="text" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. -2 or 1.5" onkeydown="if(event.key==='Enter')document.getElementById('c${k}').click()" style="margin:0;width:150px"><button class="btn g" type="button" onclick="neg(${k})" title="Toggle minus sign">±</button><button class="btn g" id="c${k}" onclick="ans(${k},document.getElementById('n${k}').value,this)">Check</button></div>`}<div class="msg" id="m${k}"></div></div>`);qsync(k)});
+  if(g.q.every(x=>x>0))build();
+}
+const maxT=q=>q.o?CFG.Q_MCQ:CFG.Q_NUM;
+function qsync(k){
+  const q=P[S.i].q[k],g=S.g[S.i],c=document.getElementById('q'+k),st=g.q[k],left=maxT(q)-g.qt[k],tr=left>1?'tries':'try';
+  c.querySelectorAll('.opt').forEach(b=>{const j=+b.dataset.j;b.classList.remove('ok','bad');if(g.qb[k].includes(j)){b.classList.add('bad');b.disabled=true}if(st==1&&j==q.a)b.classList.add('ok');if(st)b.disabled=true});
+  if(!q.o&&st)c.querySelectorAll('input,button').forEach(x=>x.disabled=true);
+  $('#m'+k).innerHTML=st==1?'<span style="color:#3ddc97">Correct ✓</span>':st==2?'<span style="color:var(--mg)">No tries left — this question is locked.</span>':g.qt[k]?`<span style="color:var(--mg)">Not quite — ${left} ${tr} left.</span>`:`<span class="dim">You have ${left} ${tr} — choose carefully.</span>`;
 }
 function ans(k,v,el){
   const q=P[S.i].q[k],g=S.g[S.i];if(g.q[k])return;
-  const ok=q.o?v==q.a:Math.abs(parseFloat(String(v).replace(/[−–—]/g,'-').replace(',','.').trim())-q.a)<1e-9;
-  if(!ok){g.qw++;$('#m'+k).innerHTML='<span class="bad" style="color:var(--mg)">Not quite — try again.</span>';if(q.o)el.classList.add('bad');return}
-  g.q[k]=true;$('#m'+k).innerHTML='<span style="color:#3ddc97">Correct ✓</span>';if(q.o)el.classList.add('ok');
-  document.querySelectorAll('#q'+k+' button,#q'+k+' input').forEach(x=>x.disabled=true);
-  if(g.q.every(Boolean))build();
+  let ok;
+  if(q.o)ok=v==q.a;
+  else{const x=parseFloat(String(v).replace(/[−–—]/g,'-').replace(',','.').trim());if(isNaN(x))return $('#m'+k).innerHTML='<span style="color:var(--mg)">Type a number first.</span>';ok=Math.abs(x-q.a)<1e-9}
+  g.qt[k]++;
+  if(ok)g.q[k]=1;else{g.qw++;if(q.o)g.qb[k].push(v);if(g.qt[k]>=maxT(q))g.q[k]=2}
+  qsync(k);
+  if(g.q.every(x=>x>0)&&!$('#build').innerHTML)build();
 }
 function neg(k){const i=document.getElementById('n'+k);i.value=i.value.trim().startsWith('-')?i.value.trim().slice(1):'-'+i.value.trim();i.focus()}
 function build(){
@@ -252,6 +260,13 @@ async function admin(){
   if(CFG.SHEET_URL){try{const r=await (await fetch(CFG.SHEET_URL+'?pass='+encodeURIComponent(CFG.PASS))).json();if(Array.isArray(r))rows=r}catch(e){alert('Could not reach the shared sheet — exporting this device’s results only.')}}
   if(!rows.length)return alert('No results yet.');
   dl(rows,'round2_results.csv');
+}
+async function clearData(){
+  if(prompt('Organizer passcode:')!==CFG.PASS)return;
+  if(!confirm('Delete ALL saved Round 2 results on this device'+(CFG.SHEET_URL?' AND in the shared Google Sheet':'')+'?\nThis cannot be undone — download the CSV first if you need it.'))return;
+  localStorage.removeItem('lt_r2');
+  if(CFG.SHEET_URL){try{await fetch(CFG.SHEET_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'clear',pass:CFG.PASS})})}catch(e){}}
+  alert('Cleared on this device.'+(CFG.SHEET_URL?' The sheet was asked to clear too — open it to confirm only the header row is left.':''));
 }
 function dl(rows,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv(rows)],{type:'text/csv'}));a.download=name;a.click()}
 if(CFG.BASE_URL)$('#home').href=CFG.BASE_URL;
